@@ -1,0 +1,65 @@
+investigate_transactions:
+  description: >
+    Analyze a batch of transactions (or a single suspect transaction) to detect anomalous patterns.
+    Extract features, compute a risk score, surface indicators of compromise (IOCs), and group related suspicious events.
+  expected_output: >
+    A list of suspicious transaction records with fields: id, risk_score, indicators, related_entities, short rationale.
+  agent: fraud_researcher
+  args_schema:
+    type: object
+    properties:
+      transactions_batch:
+        type: array
+        items:
+          type: object
+    required: [transactions_batch]
+  output_schema:
+    type: array
+    items:
+      type: object
+      properties:
+        id: {type: string}
+        risk_score: {type: number}
+        indicators: {type: array}
+        related_entities: {type: array}
+        rationale: {type: string}
+
+triage_and_prioritize:
+  description: >
+    Triage suspicious cases produced by investigation. Assign severity, suggest immediate containment steps,
+    and prioritize cases for human review.
+  expected_output: >
+    A prioritized list of cases with severity, recommended next-steps, and confidence-level per case.
+  agent: fraud_analyst
+  args_schema:
+    type: object
+    properties:
+      cases:
+        type: array
+    required: [cases]
+  output_schema:
+    type: array
+    items:
+      type: object
+      properties:
+        case_id: {type: string}
+        severity: {type: string}
+        recommended_actions: {type: array}
+        confidence: {type: number}
+
+generate_incident_report:
+  description: >
+    Consolidate investigation and triage outputs into a single incident report suitable for triage teams and stakeholders.
+    Include context, evidence, timelines, recommended remediation, and suggested detection rules.
+  expected_output: >
+    A markdown incident report (`report.md`) summarizing findings, evidence, and recommended actions.
+  agent: fraud_analyst
+  args_schema:
+    type: object
+    properties:
+      cases:
+        type: array
+    required: [cases]
+  output_schema:
+    type: string
+    description: Markdown formatted incident report

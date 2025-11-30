@@ -1,0 +1,8 @@
+click>=8.0
+pytest>=7.0
+httpx>=0.23
+# Optional, used by the RAG manager if available
+numpy>=1.24
+faiss-cpu>=1.7
+pydantic>=1.10
+PyYAML>=6.0

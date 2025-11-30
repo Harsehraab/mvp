@@ -1,0 +1,72 @@
+@startuml
+|User|
+start
+:Send request (MCP / CLI);
+
+|MCP / CLI|
+:Receive JSON / CLI args;
+note right
+  Uses `CREWAI_STORAGE_DIR` or appdirs for storage path
+  e.g. ~/.local/share/CrewAI/{project}/
+end note
+
+:Forward to Crew (or direct handler);
+
+|Guardrail|
+:Run guardrail_check(user_prompt);
+if (guardrail verdict == block?) then (yes)
+  :Return "blocked" response;
+  stop
+else (no)
+  :Proceed
+endif
+
+|Crew Orchestration|
+:Determine action / task;
+fork
+  ->[semantic context query]
+    |Short-term Memory (Chroma)|
+    :Search recent context (RAG);
+    :return context items;
+join
+
+:Pack context into prompt (respect token budget);
+:Callembedder if needed for semantic ops;
+
+|LLM|
+:Invoke model for task (e.g. generate / RAG answer);
+note right
+  LLM config from env or injected client (OpenAI / Azure)
+end note
+
+if (task == transaction) then (yes)
+  |Transactions Module|
+  :Validate request fields;
+  :init_db(db_path) if needed;
+  :add_transaction(...) -> insert into SQLite (long_term_memory_storage.db);
+  :update account balance;
+  :transaction result;
+else (no)
+  :Process other task types (knowledge, summarization, entities)
+endif
+
+fork
+  -->[update memory]
+    |Short-term Memory (Chroma)|
+    :Index new text / embeddings;
+  -->[maybe persist summary]
+    |Long-term Memory (SQLite)|
+    :Write summaries / task results for cross-session recall;
+join
+
+|Entity Memory|
+:On entity-related tasks, lookup entities (SQLite metadata + Chroma RAG);
+:Return entity canonical info if found;
+
+|Crew Orchestration|
+:Compose final response to user;
+
+|MCP / CLI|
+:Return response to user (HTTP JSON / CLI output);
+stop
+@enduml
