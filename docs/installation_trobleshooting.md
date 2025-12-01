@@ -44,6 +44,7 @@ source .venv/bin/activate
 ```bash
 pip install --upgrade pip setuptools wheel
 pip install certifi
+pip install python-certifi-win32
 ```
 
 4. Point Python/requests/pip at the certifi bundle for the current shell session (easy, non-destructive):
